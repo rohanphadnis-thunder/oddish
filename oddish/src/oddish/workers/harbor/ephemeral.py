@@ -85,8 +85,15 @@ class HarborOverrideImportError(Exception):
     """The override Harbor env could not start."""
 
 
-def _child_process_env() -> dict[str, str]:
-    """Expose parent dependencies after the child imports its override Harbor."""
+def _child_process_env(*, source: str) -> dict[str, str]:
+    """Expose parent dependencies after the child imports its override Harbor.
+
+    Public HTTPS Harbor forks must not inherit ambient GitHub credentials from
+    this self-hosted deployment. A stale or repository-scoped token can make a
+    normally public clone fail by forcing Git to authenticate. Keep the change
+    process-local and leave credentials available for non-GitHub/private
+    sources, whose registry-auth path is handled separately.
+    """
     parent_site_packages = [
         str(Path(path).resolve())
         for path in site.getsitepackages()
@@ -98,6 +105,12 @@ def _child_process_env() -> dict[str, str]:
         )
     env = os.environ.copy()
     env[_PARENT_SITE_PACKAGES_ENV] = os.pathsep.join(parent_site_packages)
+    if source.lower().startswith("https://github.com/"):
+        env.pop("GITHUB_TOKEN", None)
+        env.pop("GH_TOKEN", None)
+        env["GIT_CONFIG_COUNT"] = "1"
+        env["GIT_CONFIG_KEY_0"] = "credential.helper"
+        env["GIT_CONFIG_VALUE_0"] = ""
     return env
 
 
@@ -418,7 +431,7 @@ async def run_ephemeral_harbor_trial(
     payload_path: Path | None = None
     try:
         payload_path = _write_private_payload(payload)
-        child_env = _child_process_env()
+        child_env = _child_process_env(source=source)
         for secret_name in (
             "ODDISH_EC2_SSH_PRIVATE_KEY",
             "ODDISH_EC2_AWS_ACCESS_KEY_ID",

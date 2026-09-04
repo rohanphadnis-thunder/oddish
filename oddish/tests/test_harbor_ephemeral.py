@@ -870,7 +870,7 @@ def test_child_process_env_exposes_existing_parent_site_packages(monkeypatch, tm
         lambda: [str(first), str(tmp_path / "missing"), str(second)],
     )
 
-    env = harbor_ephemeral._child_process_env()
+    env = harbor_ephemeral._child_process_env(source=_SOURCE)
 
     assert env["ODDISH_PARENT_SITE_PACKAGES"].split(os.pathsep) == [
         str(first.resolve()),
@@ -891,7 +891,29 @@ def test_child_process_env_fails_loudly_without_parent_site_packages(
         HarborOverrideImportError,
         match="cannot locate parent site-packages",
     ):
-        harbor_ephemeral._child_process_env()
+        harbor_ephemeral._child_process_env(source=_SOURCE)
+
+
+def test_child_process_env_disables_ambient_auth_for_public_github_source(
+    monkeypatch, tmp_path
+):
+    site_packages = tmp_path / "site-packages"
+    site_packages.mkdir()
+    monkeypatch.setattr(
+        harbor_ephemeral.site, "getsitepackages", lambda: [str(site_packages)]
+    )
+    monkeypatch.setenv("GITHUB_TOKEN", "deployment-token")
+    monkeypatch.setenv("GH_TOKEN", "deployment-gh-token")
+
+    env = harbor_ephemeral._child_process_env(
+        source="https://github.com/rohanphadnis-thunder/harbor"
+    )
+
+    assert "GITHUB_TOKEN" not in env
+    assert "GH_TOKEN" not in env
+    assert env["GIT_CONFIG_COUNT"] == "1"
+    assert env["GIT_CONFIG_KEY_0"] == "credential.helper"
+    assert env["GIT_CONFIG_VALUE_0"] == ""
 
 
 _FAKE_CHILD = textwrap.dedent(
