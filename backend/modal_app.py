@@ -771,25 +771,12 @@ def assert_gke_cluster_exists() -> None:
     )
 
 
-# Appended UNCONDITIONALLY: this list is recomputed inside the container, where
-# backend/.env does not exist, so a conditional append would make deploy-time
-# and container-init dependency counts disagree. Modal 1.5 omits a completely
-# empty ``Secret.from_dict`` from the hydrated dependency list, however, while
-# the remote import still counts the object. Keep one harmless, stable value so
-# the object exists on both sides; deploy-time dotenv values are captured with
-# it and still reach the runtime.
-_LOCAL_DOTENV_SECRET_SENTINEL = "ODDISH_LOCAL_DOTENV_SECRET_PRESENT"
-
-
-def _local_dotenv_secret_payload(
-    dotenv_vars: Mapping[str, str],
-) -> dict[str, str]:
-    return {_LOCAL_DOTENV_SECRET_SENTINEL: "1", **dotenv_vars}
-
-
-runtime_secrets.append(
-    modal.Secret.from_dict(_local_dotenv_secret_payload(LOCAL_DOTENV_VARS))
-)
+# Do not attach backend/.env through an inline ``Secret.from_dict``. Modal 1.5
+# does not include inline secrets in the hydrated object IDs, while the remote
+# import still counts the Python object in ``runtime_secrets``; every function
+# then fails dependency hydration. Runtime credentials belong in the named
+# ``oddish-prod`` secret. The non-secret provider coordinates supported from
+# backend/.env are copied into ENV_VARS below.
 # Per-PR DB override created by the modal-preview workflow. Gating on
 # MODAL_APP_NAME (baked into the image) keeps the secret list identical
 # at deploy and container init.

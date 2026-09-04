@@ -22,14 +22,3 @@ def test_logfire_secret_reaches_api_dispatcher_and_workers() -> None:
     assert modal_runtime.logfire_secret in worker_functions.ec2_trial_worker_secrets
     assert modal_runtime.logfire_secret in worker_functions.thunder_trial_worker_secrets
     assert modal_runtime.logfire_secret in worker_functions.reconciler_secrets
-
-
-def test_local_dotenv_secret_has_a_stable_nonempty_dependency() -> None:
-    """Modal must not optimize the local dotenv dependency away remotely."""
-    assert modal_app._local_dotenv_secret_payload({}) == {
-        modal_app._LOCAL_DOTENV_SECRET_SENTINEL: "1"
-    }
-    assert modal_app._local_dotenv_secret_payload({"EXAMPLE": "value"}) == {
-        modal_app._LOCAL_DOTENV_SECRET_SENTINEL: "1",
-        "EXAMPLE": "value",
-    }
