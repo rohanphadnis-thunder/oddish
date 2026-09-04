@@ -860,6 +860,10 @@ ENV_VARS = {
     "MODAL_ENVIRONMENT": os.environ.get("MODAL_ENVIRONMENT", "main"),
     "ODDISH_SLACK_EXPENSE_SECRET_NAME": SLACK_EXPENSE_SECRET_NAME,
     "ODDISH_SLACK_EXPENSE_SECRET_ENVIRONMENT": SLACK_EXPENSE_SECRET_ENVIRONMENT,
+    # Preserve an explicitly empty value. Without this image-baked plan, the
+    # remote import falls back to "aws-credentials" and adds a dependency that
+    # the deploy-time function definition intentionally omitted.
+    "ODDISH_SAURON_AWS_SECRET_NAME": SAURON_AWS_SECRET_NAME,
     "ODDISH_ENABLE_CARL_AGENT": str(ENABLE_CARL_AGENT).lower(),
     # Oddish cloud settings — configures pydantic-settings fields in
     # oddish.config.Settings via ODDISH_* env vars.  Per-function DB pool

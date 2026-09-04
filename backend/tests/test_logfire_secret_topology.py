@@ -22,3 +22,10 @@ def test_logfire_secret_reaches_api_dispatcher_and_workers() -> None:
     assert modal_runtime.logfire_secret in worker_functions.ec2_trial_worker_secrets
     assert modal_runtime.logfire_secret in worker_functions.thunder_trial_worker_secrets
     assert modal_runtime.logfire_secret in worker_functions.reconciler_secrets
+
+
+def test_sauron_secret_plan_is_baked_into_the_worker_image() -> None:
+    assert (
+        modal_app.ENV_VARS["ODDISH_SAURON_AWS_SECRET_NAME"]
+        == modal_app.SAURON_AWS_SECRET_NAME
+    )
