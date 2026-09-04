@@ -3,6 +3,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["local.oddish.app"],
   output: "standalone",
+  // Local self-hosted development runs from oddish/frontend. Pin Turbopack to
+  // that directory so unrelated lockfiles higher in the user's home directory
+  // do not become the inferred workspace root and break instrumentation ESM
+  // URL handling.
+  turbopack: {
+    root: process.cwd(),
+  },
   experimental: {
     staleTimes: {
       dynamic: 30,
