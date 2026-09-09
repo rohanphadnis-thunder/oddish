@@ -882,6 +882,16 @@ ENV_VARS = {
     "ODDISH_MODAL_WORKER_MAX_CONTAINERS": str(WORKER_MAX_CONTAINERS),
     "ODDISH_DEFAULT_MODEL_CONCURRENCY": str(MODEL_CONCURRENCY_DEFAULT),
     "ODDISH_MODEL_CONCURRENCY_OVERRIDES": MODEL_CONCURRENCY_OVERRIDES,
+    # Deployment-local Harbor forks are operator policy. Bake the allowlist
+    # selected by the deploy shell so a stale value in the shared runtime
+    # secret cannot reject an explicitly permitted self-hosted source.
+    "ODDISH_HARBOR_ALLOWED_SOURCES": (
+        _deploy_value(
+            "ODDISH_HARBOR_ALLOWED_SOURCES", os.environ, LOCAL_DOTENV_VARS
+        )
+        or "https://github.com/abundant-ai/*,"
+        "https://github.com/rishidesai/*,https://github.com/dot-agi/*"
+    ),
     # nop/oracle do not call model providers; this cap is for Modal/DB/S3
     # pressure rather than provider rate limits.
     "ODDISH_NOP_ORACLE_CONCURRENCY": str(NOP_ORACLE_CONCURRENCY),
@@ -965,6 +975,7 @@ runtime_secrets.append(
                 "ODDISH_DEFAULT_MODEL_CONCURRENCY",
                 "ODDISH_MODEL_CONCURRENCY_OVERRIDES",
                 "ODDISH_NOP_ORACLE_CONCURRENCY",
+                "ODDISH_HARBOR_ALLOWED_SOURCES",
             )
         }
     )

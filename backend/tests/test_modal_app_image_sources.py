@@ -25,3 +25,10 @@ def test_image_contains_org_approval_module(monkeypatch, variant):
     # Both API auth and worker startup import this top-level module. uv_sync
     # installs dependencies only, so setuptools py-modules cannot supply it.
     assert "org_access" in copied_modules
+
+
+def test_deploy_harbor_allowlist_overrides_stale_runtime_secret():
+    import modal_app
+
+    assert modal_app.ENV_VARS["ODDISH_HARBOR_ALLOWED_SOURCES"]
+    assert "ODDISH_HARBOR_ALLOWED_SOURCES" in repr(modal_app.runtime_secrets[-1])
