@@ -1408,7 +1408,7 @@ class Settings(BaseSettings):
     # Thunder GPU backend (opt-in). Registration is gated so deployments that
     # do not carry TNR_API_TOKEN never advertise or route Thunder trials.
     thunder_enabled: bool = False
-    thunder_max_capacity: int = 16
+    thunder_max_capacity: int = 128
     # Capacity fallback is opt-in. Its non-Thunder target is dispatched on the
     # default lane after the source sandbox ledger is safely finalized.
     thunder_capacity_fallback: bool = False
@@ -1507,6 +1507,8 @@ class Settings(BaseSettings):
     default_model_concurrency: int = 8
     nop_oracle_concurrency: int = 1024
     model_concurrency_overrides: dict[str, int] = Field(default_factory=dict)
+    # Extra/private model IDs for the operator catalog, independent of job limits.
+    model_catalog: list[str] = Field(default_factory=list)
     # When enabled, a task that mixes nop/oracle baselines with LLM agents holds
     # the LLM trials BLOCKED until the baselines finish, then releases them only
     # if the baselines validate the task (oracle passes, nop fails). Otherwise

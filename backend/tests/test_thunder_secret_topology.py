@@ -54,18 +54,19 @@ print(json.dumps({
     "fallback_provider": modal_app.ENV_VARS["ODDISH_THUNDER_FALLBACK_PROVIDER"],
 }))
 """
+    env = {
+        **os.environ,
+        "ODDISH_THUNDER_ENABLED": "true",
+        "ODDISH_THUNDER_SECRET_NAME": "test-thunder",
+        "ODDISH_THUNDER_CAPACITY_FALLBACK": "T",
+        "ODDISH_THUNDER_FALLBACK_PROVIDER": "modal",
+        "ODDISH_SAURON_AWS_SECRET_NAME": "",
+    }
+    env.pop("ODDISH_THUNDER_MAX_CAPACITY", None)
     result = subprocess.run(
         [sys.executable, "-c", code],
         cwd=Path(modal_app.__file__).parent,
-        env={
-            **os.environ,
-            "ODDISH_THUNDER_ENABLED": "true",
-            "ODDISH_THUNDER_SECRET_NAME": "test-thunder",
-            "ODDISH_THUNDER_MAX_CAPACITY": "16",
-            "ODDISH_THUNDER_CAPACITY_FALLBACK": "T",
-            "ODDISH_THUNDER_FALLBACK_PROVIDER": "modal",
-            "ODDISH_SAURON_AWS_SECRET_NAME": "",
-        },
+        env=env,
         capture_output=True,
         text=True,
         check=True,
@@ -77,7 +78,7 @@ print(json.dumps({
         "base_overlap": False,
         "thunder_lane_has_secret": True,
         "generic_has_secret": False,
-        "capacity": "16",
+        "capacity": "128",
         "capacity_fallback": "true",
         "fallback_provider": "modal",
     }
@@ -106,7 +107,7 @@ def test_worker_readiness_validates_dependencies_without_returning_credentials(
     monkeypatch.setenv("TNR_API_TOKEN", "do-not-return")
     monkeypatch.setitem(sys.modules, "asyncssh", ModuleType("asyncssh"))
     versions = {
-        "thunder-sandbox": "0.5.0",
+        "thunder-sandbox": "0.6.1",
         "aiohttp": "3.12.0",
         "asyncssh": "2.21.0",
         "cryptography": "45.0.0",
@@ -115,7 +116,7 @@ def test_worker_readiness_validates_dependencies_without_returning_credentials(
 
     result = thunder_readiness.check_thunder_worker.get_raw_f()()
 
-    assert result["thunder_sandbox"] == "0.5.0"
+    assert result["thunder_sandbox"] == "0.6.1"
     assert result["api_url_resolved"] is True
     assert result["api_token_resolved"] is True
     assert "https://thunder.invalid" not in result.values()
